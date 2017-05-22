@@ -1,128 +1,124 @@
-//header file for the RBT class, C++ Period 07 Colin Aslett
+//Colin Aslett, C++ peroid 07, RBT deletion, WITH LOADS OF HELP FROM ARTUR, SO MUCH IM GONNA CITE HIM AS A SOURCE
 #include <iostream>
 #pragma once
+
 struct Node{
-  int data;//value of the node
-  Node* left;//left child of the node
-  Node* right;//right child of the node
-  Node* parent;//parent of the node
-  bool black;//true represents node is black, false means node is red
-  //changing value for Node
-  Node(int newdata, bool newblack = false) : left(0), right(0), parent(0){
-    data = newdata;
-    black = newblack;
+  int value;//number held by numb
+  Node* left, *right, *parent;
+  bool black;
+  Node(int newValue, bool newBlack = false) : left(0), right(0), parent(0){
+    value = newValue;
+    black = newBlack;
   }
-  //New node creation/Sential node creation
   Node() : left(0), right(0), parent(0){
-    data = 0;
+    value = 0;
     black = true;
-  }
-  //if it has no children then it is sentinel and returns true
+  }//checking whether the node has any children
   bool isSentinel(){
     return left == 0 && right == 0;
   }
-  //returns whether node is red
-  bool Red(){
+  //returns whether the node is opposite of black being true
+  bool isRed(){
     return !black;
   }
-  //change the Nodes value to black
+  //paitning the node black
   void paintBlack(){
     black = true;
   }
-  //change the Nodes value to red
+  //paitning the node red
   void paintRed(){
     black = false;
   }
-  //returning the grandparent of the Node
+  //turning the node sentinel, No children
+  void makeSentinel(){
+    deleteSubtrees();
+    left = 0;
+    right = 0;
+    paintBlack();
+    value = 0;
+  }//adding sentinel leafs to a node
+  void addSentinelLeafs(){
+    setLeft(new Node());
+    setRight(new Node());
+  }
+  //returning the grandparent of the node
   Node* grandparent(){
     return parent == 0 ? 0 : parent->parent;
   }
-  //returning the uncle of the Node
+  //returning the uncle of the node
   Node* uncle(){
-    Node* current = grandparent();
-    if(current == 0){//not possible to have a uncle if there is no grandparent
+    Node* gp = grandparent();
+    if(gp == 0){
       return 0;
     }
-    return current->left == parent ? current->right : current->right;
+    return gp->left == parent ? gp->right : gp->left;
   }
-  //returing the sibling of the Node
+  //returning if node is the sibling of something
   Node* sibling(){
     if(parent == 0){
       return 0;
     }
     return parent->left == this ? parent->right : parent->left;
   }
-  void changeToSentinel(){
-    deleteTree();
-    left = 0;
-    right = 0;
-    paintBlack();
-    data = 0;
-  }
-  //the node that has no children now has children
-  void addSentinelNode(){
-    setLeft(new Node());
-    setRight(new Node());
-  }
-  //setting the Nodes left child
-  void setLeft(Node* current){
-    left = current;
-    if(current != 0){
-      current->parent = this;//setting the new nodes parent to the original node
+  //setting nodes left to a new node
+  void setLeft(Node* node){
+    left = node;
+    if(node!=0){
+      node->parent = this;
     }
   }
-  //setting the Nodes right child
-  void setRight(Node* currentx){
-    right = currentx;
-    if(currentx != 0){
-      currentx->parent = this;//setting the new nodes parent to the original node
+  //setting nodes right to a new node
+  void setRight(Node* node){
+    right = node;
+    if(node!=0){
+      node->parent = this;
     }
   }
-  //returning true/false depending on it is the left/right child of parent
-  bool islchild(){
-    return parent->left == this;
-  }
-  bool isrchild(){
-    return parent->right == this;
-  }
-  //if one returns false then it points to a non-sentinel child, if both are true then it returns a sentinal child
-  Node* nonChild(){
+  Node* nonSentinelChild(){
     return left->isSentinel() ? right : left;
   }
-  //deleting the tree below the node
-  void deleteTree(){
-    if(left != 0){
-      left->deleteTree();
+  //checking to see if node is the lchild of something
+  bool isLeftChild(){
+    return parent->left == this;
+  }
+  //checking to see if node is the rchild of something
+  bool isRightChild(){
+    return parent->right == this;
+  }
+  //deleting the subtree of the node, everything below it
+  void deleteSubtrees(){
+    if(left!=0){
+      left->deleteSubtrees();
     }
-    if(right != 0){
-      right->deleteTree();
+    if(right!=0){
+      right->deleteSubtrees();
     }
     delete left;
     delete right;
   }
-  //Node deconstructor
-  ~Node(){
-  }
+  ~Node(){}
 };
-class RBT{
- public:
-  RBT();
-  ~RBT();
-  void add(int x);//adding a number/node to the tree
-  bool remove(int x);//removing a certain node, have to know the value first, true means it was able to, false means it couldnt find the number
-  void print();//print out tree
-  bool empty();//returns whether the tree is empty or not
-  bool inTree(int x);//returns whether the number is in tree
- private:
-  Node* root;//top of the tree
-  Node* first(Node* current, int x);//inserting BST way first
-  int level(Node* root, int lvl);//returning number of levels in tree
-  void populate(int* &array,int x, Node* current);
-  void preserveProp(Node* current);//preserving the RBT properties
-  Node* search(Node* current, int x);//looking to see if a certain node is in the tree
-  void leftRotation(Node* current);
-  void rightRotation(Node* current);
-  Node** parentptr(Node* current);
-  void replace(Node* current);
-  Node* deltx(Node* current);//deleting a node
+
+class RedBlackTree{
+  public:
+    RedBlackTree();
+    ~RedBlackTree();
+    void insert(int num);
+    bool isInTree(int num);
+    bool remove(int num);
+    bool isEmpty();
+    void print();
+  private:
+    Node* root;
+    Node* insertInitial(Node * node, int num);
+    void preserveTreeProperties(Node * inserted);
+    int getNumLevels(Node* root, int level);
+    void populateArray(int *& array, int index, Node* node);
+    Node* find(Node * node, int num);
+    void removeSingleNode(Node* toRemove);
+    void leftRotation(Node* formerChild);
+    void rightRotation(Node* formerChild);
+    Node** parentPtrTo(Node* child);
+    void replaceParentOf(Node* child);
+    void rebalance(Node* node);
 };
